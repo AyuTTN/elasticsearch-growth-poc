@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Orders</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="layout">
+    <nav class="nav">
+        <a th:href="@{/products}">Products</a>
+        <a class="active" th:href="@{/orders}">Orders</a>
+    </nav>
+
+    <header>
+        <p class="eyebrow">Spring Boot learning POC</p>
+        <h1>Orders</h1>
+        <p class="subtitle">
+            An order is one Elasticsearch document with line items copied in.
+            Stock is checked and updated in Java, not with an SQL transaction.
+        </p>
+    </header>
+
+    <p class="success" th:if="${successMessage}" th:text="${successMessage}"></p>
+
+    <section class="panel">
+        <h2>Search orders</h2>
+        <form class="search-form" th:action="@{/orders}" method="get">
+            <div class="field">
+                <label for="email">Customer email (exact)</label>
+                <input id="email" name="email" type="email" th:value="${email}"
+                       placeholder="buyer@example.com">
+            </div>
+            <div class="field">
+                <label for="status">Status (exact)</label>
+                <select id="status" name="status">
+                    <option value="" th:selected="${status == null or status.isEmpty()}">Any</option>
+                    <option th:each="value : ${statuses}"
+                            th:value="${value}"
+                            th:text="${value}"
+                            th:selected="${value.name() == status}"></option>
+                </select>
+            </div>
+            <div class="search-actions">
+                <button type="submit">Search</button>
+                <a class="secondary-action" th:href="@{/orders}">Clear</a>
+            </div>
+        </form>
+        <p class="search-note">
+            Email and status are Keyword fields, so these are <code>term</code> filters, not full-text search.
+        </p>
+    </section>
+
+    <section class="panel">
+        <h2>Place order</h2>
+        <form th:action="@{/orders}" th:object="${orderForm}" method="post">
+            <p class="error" th:if="${#fields.hasGlobalErrors()}"
+               th:each="err : ${#fields.globalErrors()}"
+               th:text="${err}"></p>
+            <div class="form-row order-form-row">
+                <div class="field">
+                    <label for="customerEmail">Customer email</label>
+                    <input id="customerEmail" type="email" th:field="*{customerEmail}"
+                           placeholder="buyer@example.com">
+                    <small class="error" th:errors="*{customerEmail}"></small>
+                </div>
+                <div class="field">
+                    <label for="productId">Product</label>
+                    <select id="productId" th:field="*{productId}">
+                        <option value="">Select a product</option>
+                        <option th:each="product : ${products}"
+                                th:value="${product.id}"
+                                th:text="${product.name} + ' (stock ' + ${product.stock} + ')'"></option>
+                    </select>
+                    <small class="error" th:errors="*{productId}"></small>
+                </div>
+                <div class="field">
+                    <label for="quantity">Quantity</label>
+                    <input id="quantity" type="number" min="1" step="1" th:field="*{quantity}" placeholder="1">
+                    <small class="error" th:errors="*{quantity}"></small>
+                </div>
+            </div>
+            <button type="submit">Place order</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="section-heading">
+            <h2 th:text="${searchActive} ? 'Search results' : 'Orders'">Orders</h2>
+            <span class="count" th:text="${orders.size()} + ' total'">0 total</span>
+        </div>
+
+        <p class="empty" th:if="${orders.isEmpty()}">
+            No orders yet. Place one above, then create a Kibana data view on <code>orders</code>.
+        </p>
+
+        <div class="table-scroll" th:unless="${orders.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Created</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${orders}">
+                    <td th:text="${order.id}"></td>
+                    <td th:text="${order.customerEmail}"></td>
+                    <td><span class="tag" th:text="${order.status}"></span></td>
+                    <td>
+                        <span th:each="item : ${order.items}">
+                            <span th:text="${item.quantity} + ' × ' + ${item.productName}"></span>
+                        </span>
+                    </td>
+                    <td th:text="${#numbers.formatDecimal(order.total, 1, 2)}"></td>
+                    <td th:text="${order.createdAt}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

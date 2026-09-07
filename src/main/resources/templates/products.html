@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Product Catalog</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="layout">
+    <nav class="nav">
+        <a class="active" th:href="@{/products}">Products</a>
+        <a th:href="@{/orders}">Orders</a>
+    </nav>
+
+    <header>
+        <p class="eyebrow">Spring Boot learning POC</p>
+        <h1>Product catalog</h1>
+        <p class="subtitle">
+            Products are stored in Elasticsearch and survive application restarts.
+        </p>
+    </header>
+
+    <p class="success" th:if="${successMessage}" th:text="${successMessage}"></p>
+
+    <section class="panel">
+        <h2>Search products</h2>
+        <form class="search-form" th:action="@{/products}" method="get">
+            <div class="field">
+                <label for="q">Name or description</label>
+                <input id="q" name="q" type="search" th:value="${q}"
+                       placeholder="Try: headphones or noise cancelling">
+            </div>
+
+            <div class="field">
+                <label for="search-category">Category (exact)</label>
+                <input id="search-category" name="category" type="text" th:value="${category}"
+                       placeholder="Try: Electronics">
+            </div>
+
+            <div class="search-actions">
+                <button type="submit">Search</button>
+                <a class="secondary-action" th:href="@{/products}">Clear</a>
+            </div>
+        </form>
+        <p class="search-note">
+            Text uses an analyzed multi-match query. Category uses an exact, case-sensitive keyword filter.
+        </p>
+    </section>
+
+    <section class="panel">
+        <h2>Add product</h2>
+        <form th:action="@{/products}" th:object="${productForm}" method="post">
+            <div class="field">
+                <label for="name">Name</label>
+                <input id="name" type="text" th:field="*{name}" placeholder="Wireless headphones">
+                <small class="error" th:errors="*{name}"></small>
+            </div>
+
+            <div class="field">
+                <label for="description">Description</label>
+                <textarea id="description" th:field="*{description}"
+                          placeholder="Noise-cancelling over-ear headphones"></textarea>
+                <small class="error" th:errors="*{description}"></small>
+            </div>
+
+            <div class="form-row">
+                <div class="field">
+                    <label for="category">Category</label>
+                    <input id="category" type="text" th:field="*{category}" placeholder="Electronics">
+                    <small class="error" th:errors="*{category}"></small>
+                </div>
+
+                <div class="field">
+                    <label for="price">Price</label>
+                    <input id="price" type="number" min="0.01" step="0.01" th:field="*{price}"
+                           placeholder="199.99">
+                    <small class="error" th:errors="*{price}"></small>
+                </div>
+
+                <div class="field">
+                    <label for="stock">Stock</label>
+                    <input id="stock" type="number" min="0" step="1" th:field="*{stock}" placeholder="25">
+                    <small class="error" th:errors="*{stock}"></small>
+                </div>
+            </div>
+
+            <button type="submit">Add product</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="section-heading">
+            <h2 th:text="${searchActive} ? 'Search results' : 'Products'">Products</h2>
+            <span class="count" th:text="${products.size()} + ' total'">0 total</span>
+        </div>
+
+        <p class="empty" th:if="${products.isEmpty()}">
+            No products matched. Change the search or clear the filters.
+        </p>
+
+        <div class="table-scroll" th:unless="${products.isEmpty()}">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Description</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${products}">
+                    <td th:text="${product.id}"></td>
+                    <td th:text="${product.name}"></td>
+                    <td><span class="tag" th:text="${product.category}"></span></td>
+                    <td th:text="${#numbers.formatDecimal(product.price, 1, 2)}"></td>
+                    <td th:text="${product.stock}"></td>
+                    <td th:text="${product.description}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
