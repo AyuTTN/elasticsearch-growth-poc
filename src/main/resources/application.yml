@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: elasticsearch-growth-poc
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URI:http://localhost:9200}
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
